@@ -21,7 +21,7 @@ server.route('get','/script.js', (req,res)=>{
 })
 
 server.route('post', '/login', (req,res)=>{
-    res.status(401).json({mesage:"Bhak! nahi milega access"})
+    res.status(401).json({mesage:"You are not registered"})
 })
 
 server.listen(PORT, ()=>{
