@@ -6,6 +6,8 @@ class Butter{
     constructor(){
         this.server = http.createServer();
         this.routes = {}
+        this.middleware = [];
+
         this.server.on('request', (req,res)=>{
 
             res.status = (code) => {//set status code of response
@@ -44,17 +46,33 @@ class Butter{
                 readStream.pipe(res);
             }
 
-            if(!this.routes[req.method.toLowerCase()+req.url]){
-                return res.status(404).json({error: `Cannot ${req.method} ${req.url}`})
+            const runMiddleware=(req, res, middleware_array, idx)=>{
+                if(idx === middleware_array.length){
+
+                    //if the routes obj does not have the key of req.method+req.url
+                    if(!this.routes[req.method.toLowerCase()+req.url]){
+                        return res.status(404).json({error: `Cannot ${req.method} ${req.url}`})
+                    }
+
+                    this.routes[req.method.toLowerCase() + req.url](req,res);
+                }else{
+                    middleware_array[idx](req,res, ()=>{
+                        runMiddleware(req,res, middleware_array, idx+1);
+                    })
+                }
             }
 
-            this.routes[req.method.toLowerCase()+req.url](req,res);
+            runMiddleware(req,res,this.middleware, 0)
         });
     }
 
     route(method, path, cb){
         this.routes[method+path] = cb;
         console.log(this.routes)
+    }
+
+    beforeEach(cb){
+        this.middleware.push(cb);
     }
 
     listen (port, cb){
